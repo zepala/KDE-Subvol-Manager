@@ -1,0 +1,7 @@
+[Btrfs]
+  Identity=unix-group:sudo
+  Action=org.local.pkexec.btrfs
+  ResultAny=no
+  ResultInactive=no
+  ResultActive=yes
+

@@ -1,0 +1,178 @@
+#!/bin/bash
+
+if [ "x$1" != "x" ]; then
+    FUNC=$1
+fi
+
+if [ "x$2" != "x" ]; then
+    SOURCE=$2
+    DESTINATION="$(dirname $SOURCE)/$(basename $SOURCE)-$(date +%Y%m%d-%H%M%S)"
+fi
+
+function is_root {
+    if [ "$(id -u)" == "0" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+function is_btrfs {
+    local SOURCE=$1
+    
+    if [[ "$(stat -f --format="%T" "$SOURCE")" -ne "btrfs" ]] || [[ "$(stat --format="%i" "$SOURCE")" -ne 256 ]]; then
+        return 1
+    else
+        return 0
+    fi
+}
+
+function is_subvol {
+    local SOURCE=$1
+    if $(is_btrfs "$SOURCE"); then
+        if [[ $(pkexec btrfs subvolume show "$SOURCE") ]]; then
+            return 0
+        else
+            return 1
+        fi
+    else
+        return 1
+    fi
+}
+
+function is_read_only {
+    local SOURCE=$1
+    local RES
+    if $(is_btrfs "$SOURCE"); then
+        RES=$(btrfs property get -ts "$SOURCE")
+        if [[ ${RES: -4} == "true" ]]; then
+            return 0
+        else
+            return 1
+        fi
+    fi
+}
+
+function info_subvol {
+    local SOURCE=$1
+    if $(is_btrfs "$SOURCE"); then
+        if $(is_root); then
+            kdialog --title "Détails sur $SOURCE" --msgbox "$(btrfs subvolume show $SOURCE)"
+        else
+            kdialog --title "Détails sur $SOURCE" --msgbox "$(pkexec btrfs subvolume show $SOURCE)"
+        fi
+    fi
+}
+
+function create_subvol {
+    local SOURCE=$1
+    local NAME
+    if $(is_btrfs "$SOURCE"); then
+        NAME=`kdialog --title "Créer un sous volume :" --inputbox "Nom du sous volume :" ""`
+        if [ $? -eq 0 ]; then
+            if $(is_root); then
+                btrfs subvolume create "$SOURCE/$NAME"
+            else
+                pkexec btrfs subvolume create "$SOURCE/$NAME"
+            fi
+        fi
+    fi
+}
+
+function snapshot_subvol {
+    local SOURCE=$1
+    local NAME
+    if $(is_btrfs "$SOURCE"); then
+        NAME=`kdialog --title "Créer un sous volume :" --inputbox "Nom du sous volume :" "$DESTINATION"`
+        if [ "$?" == 0 ]; then
+            if $(is_root); then
+                btrfs subvolume snapshot "$SOURCE" "$NAME"
+            else
+                pkexec btrfs subvolume snapshot "$SOURCE" "$NAME"
+            fi
+        fi
+    fi
+}
+
+function toggle_subvol_ro {
+    local SOURCE=$1
+    if $(is_btrfs "$SOURCE"); then
+        if $(is_read_only "$SOURCE"); then
+            kdialog --title "Basculer l'attribut lecture seule ..." --yesno "Passer le sous volume en lecture/écriture ?"
+        else
+            kdialog --title "Basculer l'attribut lecture seule ..." --yesno "Passer le sous volume en lecture seule ?"
+        fi
+        if [ $? -eq 0 ]; then
+            if $(is_root); then
+                if $(is_read_only "$SOURCE"); then
+                    btrfs prop set "$SOURCE" ro false
+                else
+                    btrfs prop set "$SOURCE" ro true
+                fi
+            else
+                if $(is_read_only "$SOURCE"); then
+                    pkexec btrfs prop set "$SOURCE" ro false
+                else
+                    pkexec btrfs prop set "$SOURCE" ro true
+                fi
+            fi
+        fi
+    fi
+}
+
+function delete_subvol {
+    local SOURCE=$1
+    if $(is_btrfs "$SOURCE"); then
+        if $(is_read_only "$SOURCE"); then
+            kdialog --title "Supprimer $SOURCE" --error "Instantané en lecture seule !"
+        else
+            kdialog --title "Supprimer l'instantané ..." --warningyesno "Êtes vous sur de vouloir supprimer le sous volume\n\n$SOURCE ?"
+            if [ $? = 0 ]; then
+                if $(is_root); then
+                    btrfs subvolume delete "$SOURCE"
+                else
+                    pkexec btrfs subvolume delete "$SOURCE"
+                fi
+            fi
+        fi
+    fi
+}
+
+case $FUNC in
+    IS_BTRFS)
+        is_btrfs "$SOURCE"
+        if [ $? -eq 0 ]; then
+            kdialog --msgbox "\"$SOURCE\" est un volume BTRFS."
+        else
+            kdialog --error "\"$SOURCE\" n'est pas un volume BTRFS !"
+        fi
+        ;;
+    IS_SUBVOL)
+        is_subvol "$SOURCE"
+        ;;
+    IS_READ_ONLY)
+        is_read_only "$SOURCE"
+        ;;
+    INFO_SUBVOL)
+        info_subvol "$SOURCE"
+        ;;
+    CREATE_SUBVOL)
+        create_subvol "$SOURCE"
+        ;;
+    SNAPSHOT_SUBVOL)
+        snapshot_subvol "$SOURCE"
+        ;;
+    TOGGLE_SUBVOL_RO)
+        toggle_subvol_ro "$SOURCE"
+        ;;
+    DELETE_SUBVOL)
+        delete_subvol "$SOURCE"
+        ;;
+    *)
+        echo "Usage :"
+        echo ""
+        echo "  $0 IS_BTRFS|IS_SUBVOL|INFO_SUBVOL|SNAPSHOT_SUBVOL|TOGGLE_SUBVOL_RO <source subvolume>"
+        echo ""
+        exit 1
+        ;;
+esac

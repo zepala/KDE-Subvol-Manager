@@ -1,0 +1,49 @@
+#
+# This is a complete rewrite of BTRFS Subvolume Manager 2018 v0.3 By Stuart K. Smith <stuartksmith@gmail.com>
+#
+
+[Desktop Entry]
+Type=Service
+Actions=issubvol;_SEPARATOR_;getinfo;createsubvol;takesnapshot;takerosnapshot;sendreceive;_SEPARATOR_;deletesubvol;
+X-KDE-ServiceTypes=KonqPopupMenu/Plugin,inode/directory
+MimeType=inode/directory;
+X-KDE-StartupNotify=false
+X-KDE-Priority=TopLevel
+X-KDE-Submenu=Manage BTRFS Subvolumes
+X-KDE-Submenu[fr]=Gestion des volumes BTRFS
+
+[Desktop Action issubvol]
+Icon=dialog-question-symbolic
+Name=Is this a BTRFS Subvolume
+Name[fr]=Est-ce un volume BTRFS ?
+Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager IS_BTRFS %U
+
+[Desktop Action getinfo]
+Icon=dialog-question-symbolic
+Name=Detailed Subvolume information
+Name[fr]=Informations détaillées sur le volume
+Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager INFO_SUBVOL %U
+
+[Desktop Action createsubvol]
+Icon=archive-insert
+Name=Create BTRFS Subvolume
+Name[fr]=Nouveau un sous volume
+Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager CREATE_SUBVOL %U
+
+[Desktop Action takesnapshot]
+Icon=camera-photo
+Name=Take a Subvolume Snapshot
+Name[fr]=Créer un instantané
+Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager SNAPSHOT_SUBVOL %U
+
+[Desktop Action takerosnapshot]
+Icon=security-medium-symbolic
+Name=Toggle Read-Only Subvolume Attribute
+Name[fr]=Basculer l'attribut lecture seule
+Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager TOGGLE_SUBVOL_RO %U
+
+[Desktop Action deletesubvol]
+Icon=user-trash-full
+Name=Permanently Delete a Subvolume
+Name[fr]=Supprimer un volume BTRFS
+Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager DELETE_SUBVOL %U
