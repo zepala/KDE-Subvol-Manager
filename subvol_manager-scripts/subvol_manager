@@ -9,6 +9,11 @@ if [ "x$2" != "x" ]; then
     DESTINATION="$(dirname $SOURCE)/$(basename $SOURCE)-$(date +%Y%m%d-%H%M%S)"
 fi
 
+if [ "x$3" != "x" ]; then
+	SOURCE=$2
+	DESTINATION=$3
+fi
+
 function is_root {
     if [ "$(id -u)" == "0" ]; then
         return 0
@@ -62,6 +67,29 @@ function info_subvol {
             kdialog --title "Détails sur $SOURCE" --msgbox "$(pkexec btrfs subvolume show $SOURCE)"
         fi
     fi
+}
+
+function diff_subvol {
+	local SNAP1=$1
+	local SNAP2=$2
+	local SOURCE
+	local GENERATION
+	
+	ID1=$(pkexec btrfs subvolume show $SNAP1 | grep 'Gen at creation' | awk '{print $4}')
+	ID2=$(pkexec btrfs subvolume show $SNAP2 | grep 'Gen at creation' | awk '{print $4}')
+	
+	if [ $ID1 -gt $ID2 ]; then
+		SOURCE=$1
+		DESTINATION=$2
+		GENERATION=$ID2
+	else
+		SOURCE=$2
+		DESTINATION=$1
+		GENERATION=$ID1
+	fi
+	
+	pkexec btrfs subvolume find-new $SOURCE $GENERATION | sed '$d' | cut -f17- -d' ' | sort | uniq | kdialog --title "Différences entre $SOURCE et $DESTINATION" --textbox - 1024 768
+	#kdialog --title "Différences entre $SOURCE et $DESTINATION" --msgbox "1 -> $SNAP1 ($ID1)\n2 -> $SNAP2 ($ID2)\n\n$SOURCE ($GENERATION)"
 }
 
 function create_subvol {
@@ -156,6 +184,9 @@ case $FUNC in
     INFO_SUBVOL)
         info_subvol "$SOURCE"
         ;;
+	DIFF_SUBVOL)
+		diff_subvol "$SOURCE" "$DESTINATION"
+		;;
     CREATE_SUBVOL)
         create_subvol "$SOURCE"
         ;;

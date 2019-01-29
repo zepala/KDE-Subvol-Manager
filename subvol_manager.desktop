@@ -1,10 +1,15 @@
 #
-# This is a complete rewrite of BTRFS Subvolume Manager 2018 v0.3 By Stuart K. Smith <stuartksmith@gmail.com>
+#
+# BTRFS Subvolume Manager 2018
+# version 0.3
+# By Stuart K. Smith <stuartksmith@gmail.com>
+#
+# Desktop file for servicemenu v3
 #
 
 [Desktop Entry]
 Type=Service
-Actions=issubvol;_SEPARATOR_;getinfo;createsubvol;takesnapshot;takerosnapshot;sendreceive;_SEPARATOR_;deletesubvol;
+Actions=issubvol;getinfo;diff;_SEPARATOR_;createsubvol;takesnapshot;togglerosnapshot;_SEPARATOR_;deletesubvol;
 X-KDE-ServiceTypes=KonqPopupMenu/Plugin,inode/directory
 MimeType=inode/directory;
 X-KDE-StartupNotify=false
@@ -24,10 +29,16 @@ Name=Detailed Subvolume information
 Name[fr]=Informations détaillées sur le volume
 Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager INFO_SUBVOL %U
 
+[Desktop Action diff]
+Icon=alarm-symbolic
+Name=Subvolume Diff
+Name[fr]=Différence entre instantanés
+Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager DIFF_SUBVOL %U
+
 [Desktop Action createsubvol]
 Icon=archive-insert
 Name=Create BTRFS Subvolume
-Name[fr]=Nouveau un sous volume
+Name[fr]=Nouveau sous volume
 Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager CREATE_SUBVOL %U
 
 [Desktop Action takesnapshot]
@@ -36,7 +47,7 @@ Name=Take a Subvolume Snapshot
 Name[fr]=Créer un instantané
 Exec=$HOME/.local/share/kservices5/ServiceMenus/subvol_manager-scripts/subvol_manager SNAPSHOT_SUBVOL %U
 
-[Desktop Action takerosnapshot]
+[Desktop Action togglerosnapshot]
 Icon=security-medium-symbolic
 Name=Toggle Read-Only Subvolume Attribute
 Name[fr]=Basculer l'attribut lecture seule
